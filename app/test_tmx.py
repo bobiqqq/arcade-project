@@ -3,7 +3,7 @@ import os
 from bullet import Bullet
 from constants import *
 from hero import Hero
-
+import random
 
 class DungeonRunner(arcade.Window):
     def __init__(self):
@@ -13,17 +13,17 @@ class DungeonRunner(arcade.Window):
         self.world_camera.zoom = 0.7
         self.gui_camera = arcade.camera.Camera2D()
 
-    def setup(self):
+    def setup(self, level_path="levels/level_01.tmx"):
         self.player_list = arcade.SpriteList()
         self.enemy_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
         self.key_list = arcade.SpriteList()
         self.bomb_list = arcade.SpriteList()
         self.bullet_list = arcade.SpriteList()
+        self.level_list = [f"levels/level_01.tmx"]
 
-        map_path = os.path.join("levels", "level_01.tmx")
-        self.tile_map = arcade.load_tilemap(map_path, scaling=TILE_SCALING)
-        
+        self.tile_map = arcade.load_tilemap(level_path, scaling=TILE_SCALING)
+
         self.floor_list = self.tile_map.sprite_lists["floor"]
         self.wall_list = self.tile_map.sprite_lists["walls"]
         self.collision_list = self.tile_map.sprite_lists["collision"]
@@ -67,7 +67,7 @@ class DungeonRunner(arcade.Window):
 
         if self.player and self.collision_list:
             self.physics_engine = arcade.PhysicsEngineSimple(self.player, self.collision_list)
-        
+
         self.world_camera.position = (self.player.center_x, self.player.center_y)
 
     def on_draw(self):
@@ -92,6 +92,7 @@ class DungeonRunner(arcade.Window):
         self.player_list.update_animation()
         self.bullet_list.update(delta_time)
         self.check_pickups()
+        self.check_exit()
         self.check_bullets_hit_enemies()
 
         self.world_camera.position = arcade.math.lerp_2d(
@@ -109,6 +110,13 @@ class DungeonRunner(arcade.Window):
             key.remove_from_sprite_lists()
             self.player.has_key = True
 
+    def check_exit(self):
+        if not self.player.has_key:
+            return
+        if arcade.check_for_collision_with_list(self.player, self.exit_list):
+            level = random.choice(self.level_list)
+            self.setup(level_path=level)
+
     def check_bullets_hit_enemies(self):
         for bullet in self.bullet_list:
             hit_list = arcade.check_for_collision_with_list(bullet, self.enemy_list)
@@ -118,16 +126,15 @@ class DungeonRunner(arcade.Window):
                     continue
                 else:
                     bullet.remove_from_sprite_lists()
-            
+
             bullet.remove_from_sprite_lists()
             for enemy in hit_list:
                 self.damage_enemy(enemy, bullet.damage)
 
-    def damage_enemy(self, enemy, damage):        
+    def damage_enemy(self, enemy, damage):
         enemy.hp -= damage
         if enemy.hp <= 0:
             enemy.remove_from_sprite_lists()
-
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button == arcade.MOUSE_BUTTON_LEFT:
@@ -148,7 +155,7 @@ class DungeonRunner(arcade.Window):
 
     def on_key_press(self, key, modifiers):
         self.keys_pressed.add(key)
-        
+
     def on_key_release(self, key, modifiers):
         if key in self.keys_pressed:
             self.keys_pressed.remove(key)

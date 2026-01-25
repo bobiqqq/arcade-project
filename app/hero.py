@@ -10,13 +10,11 @@ class FaceDirection(enum.Enum):
 class Hero(arcade.Sprite):
     def __init__(self):
         super().__init__()
-        
-        # Основные характеристики
+
         self.scale = 0.8
         self.speed = PLAYER_MOVEMENT_SPEED
         self.health = 100
-        
-        # Загрузка текстур
+
         self.idle_texture = arcade.load_texture(":resources:/images/animated_characters/female_person/femalePerson_idle.png")
         self.texture = self.idle_texture
         

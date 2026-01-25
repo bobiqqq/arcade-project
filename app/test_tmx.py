@@ -1,12 +1,8 @@
 import arcade
 import os
-
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-SCREEN_TITLE = "Dungeon Runner"
-TILE_SCALING = 1.0
-PLAYER_MOVEMENT_SPEED = 5
-CAMERA_LERP = 0.1
+from bullet import Bullet
+from constants import *
+from hero import Hero
 
 
 class DungeonRunner(arcade.Window):
@@ -23,7 +19,7 @@ class DungeonRunner(arcade.Window):
         self.coin_list = arcade.SpriteList()
         self.key_list = arcade.SpriteList()
         self.bomb_list = arcade.SpriteList()
-        self.exit_list = arcade.SpriteList()
+        self.bullet_list = arcade.SpriteList()
 
         map_path = os.path.join("levels", "level_01.tmx")
         self.tile_map = arcade.load_tilemap(map_path, scaling=TILE_SCALING)
@@ -33,38 +29,36 @@ class DungeonRunner(arcade.Window):
         self.collision_list = self.tile_map.sprite_lists["collision"]
         self.exit_list = self.tile_map.sprite_lists["exit"]
 
+        self.shoot_sound = arcade.load_sound(":resources:/sounds/laser1.wav")
+        self.keys_pressed = set()
+
         object_layer = self.tile_map.object_lists["Object Layer 1"]
         if object_layer:
             for obj in object_layer:
                 x, y = obj.shape[0], obj.shape[1]
-
                 if obj.name == "player_spawn":
-                    self.player = arcade.Sprite(
-                        ":resources:images/animated_characters/female_person/femalePerson_idle.png",
-                        scale=0.8
-                    )
+                    self.player = Hero()
                     self.player.center_x = x
                     self.player.center_y = y
+                    self.player.has_key = False
+                    self.player.coins = 0
                     self.player_list.append(self.player)
-
                 elif obj.name == "enemy":
                     enemy = arcade.Sprite(":resources:images/enemies/slimeBlue.png", scale=0.7)
                     enemy.center_x = x
                     enemy.center_y = y
+                    enemy.hp = 30
                     self.enemy_list.append(enemy)
-
                 elif obj.name == "coin":
                     coin = arcade.Sprite(":resources:images/items/coinGold.png", scale=0.5)
                     coin.center_x = x
                     coin.center_y = y
                     self.coin_list.append(coin)
-
                 elif obj.name == "key":
                     key = arcade.Sprite(":resources:images/items/keyYellow.png", scale=0.6)
                     key.center_x = x
                     key.center_y = y
                     self.key_list.append(key)
-
                 elif obj.name == "bomb":
                     bomb = arcade.Sprite(":resources:images/tiles/bomb.png", scale=0.5)
                     bomb.center_x = x
@@ -87,12 +81,18 @@ class DungeonRunner(arcade.Window):
         self.bomb_list.draw()
         self.player_list.draw()
         self.exit_list.draw()
+        self.bullet_list.draw()
 
     def on_update(self, delta_time):
         if self.physics_engine:
             self.physics_engine.update()
+        self.player.update(delta_time, self.keys_pressed)
 
         position = self.player.center_x, self.player.center_y
+        self.player_list.update_animation()
+        self.bullet_list.update(delta_time)
+        self.check_pickups()
+        self.check_bullets_hit_enemies()
 
         self.world_camera.position = arcade.math.lerp_2d(
             self.world_camera.position,
@@ -100,27 +100,58 @@ class DungeonRunner(arcade.Window):
             CAMERA_LERP,
         )
 
+    def check_pickups(self):
+        for coin in arcade.check_for_collision_with_list(self.player, self.coin_list):
+            coin.remove_from_sprite_lists()
+            self.player.coins += 1
+
+        for key in arcade.check_for_collision_with_list(self.player, self.key_list):
+            key.remove_from_sprite_lists()
+            self.player.has_key = True
+
+    def check_bullets_hit_enemies(self):
+        for bullet in self.bullet_list:
+            hit_list = arcade.check_for_collision_with_list(bullet, self.enemy_list)
+            if not hit_list:
+                hit_walls = arcade.check_for_collision_with_list(bullet, self.wall_list)
+                if not hit_walls:
+                    continue
+                else:
+                    bullet.remove_from_sprite_lists()
+            
+            bullet.remove_from_sprite_lists()
+            for enemy in hit_list:
+                self.damage_enemy(enemy, bullet.damage)
+
+    def damage_enemy(self, enemy, damage):        
+        enemy.hp -= damage
+        if enemy.hp <= 0:
+            enemy.remove_from_sprite_lists()
+
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        if button == arcade.MOUSE_BUTTON_LEFT:
+            world_pos = self.world_camera.unproject((x, y))
+            target_x, target_y = world_pos[0], world_pos[1]
+            bullet = Bullet(
+                self.player.center_x,
+                self.player.center_y,
+                target_x,
+                target_y,
+                speed=BULLET_SPEED,
+                damage=BULLET_DAMAGE,
+                lifetime=BULLET_LIFETIME,
+            )
+            self.bullet_list.append(bullet)
+
+            arcade.play_sound(self.shoot_sound)
 
     def on_key_press(self, key, modifiers):
-        if key in (arcade.key.W, arcade.key.UP):
-            self.player.change_y = PLAYER_MOVEMENT_SPEED
-        elif key in (arcade.key.S, arcade.key.DOWN):
-            self.player.change_y = -PLAYER_MOVEMENT_SPEED
-        elif key in (arcade.key.A, arcade.key.LEFT):
-            self.player.change_x = -PLAYER_MOVEMENT_SPEED
-        elif key in (arcade.key.D, arcade.key.RIGHT):
-            self.player.change_x = PLAYER_MOVEMENT_SPEED
+        self.keys_pressed.add(key)
         
-        if self.player.change_x != 0 and self.player.change_y != 0:
-            self.player.change_x *= 0.7071
-            self.player.change_x *= 0.7071
-
-
     def on_key_release(self, key, modifiers):
-        if key in (arcade.key.W, arcade.key.S, arcade.key.UP, arcade.key.DOWN):
-            self.player.change_y = 0
-        if key in (arcade.key.A, arcade.key.D, arcade.key.LEFT, arcade.key.RIGHT):
-            self.player.change_x = 0
+        if key in self.keys_pressed:
+            self.keys_pressed.remove(key)
 
 
 def main():

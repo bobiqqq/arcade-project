@@ -26,6 +26,7 @@ class StartView(arcade.View):
             anchor_y="center",
         )
 
+    # Начало игрового цикла по нажатию пробела, на ESC - выход
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ESCAPE:
             self.window.close()
@@ -42,12 +43,13 @@ class BeetwenLevel(arcade.View):
     def __init__(self, level):
         super().__init__()
         self.level = level
-        self.level.player.has_key = False
+        self.level.player.has_key = False # Обнуляем наличие ключа у игрока при переходе на новый уровень
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.BLACK)
-
-    def on_draw(self):
+    
+    # Отображение текста о возможности улучшения при переходе на следующий уровень
+    def on_draw(self): 
         self.clear()
         arcade.draw_text(
             "Выберите улучшение",
@@ -95,6 +97,7 @@ class BeetwenLevel(arcade.View):
             anchor_y="center",
         )
 
+    # Выбор улучшения и переход на новый уровень
     def on_key_press(self, key, modifiers):
         if key == arcade.key.KEY_1:
             self.level.player.hp += 20
@@ -115,10 +118,12 @@ class GameOver(arcade.View):
         super().__init__()
         self.player = player
 
+        # Получаем статистику игрока для подсчета очков
         self.levels = self.player.stats["levels"]
         self.coins = self.player.stats["coins"]
         self.kills = self.player.stats["kills"]
 
+        # Подсчет очков по супер сложной формуле
         self.score = self.levels * 100
         self.score += self.coins * 10
         self.score += self.kills * 50

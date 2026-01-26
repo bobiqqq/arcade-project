@@ -10,11 +10,13 @@ class FaceDirection(enum.Enum):
 class Hero(arcade.Sprite):
     def __init__(self):
         super().__init__()
-
+        
         self.scale = 0.8
         self.speed = PLAYER_MOVEMENT_SPEED
-        self.health = 100
-
+        self.hp = 100
+        self.damaged_end = 0
+        self.damage = 10
+        
         self.idle_texture = arcade.load_texture(":resources:/images/animated_characters/female_person/femalePerson_idle.png")
         self.texture = self.idle_texture
         
@@ -29,8 +31,10 @@ class Hero(arcade.Sprite):
         
         self.is_walking = False
         self.face_direction = FaceDirection.RIGHT
-        self.has_key = False
+        self.has_key = True
         self.coins = 0
+        self.stats = {"kills": 0, "coins": 0, "levels": 0}
+        self.if_damaged = False
 
     def update_animation(self, delta_time: float = 1/60):
         if self.is_walking:
@@ -79,3 +83,12 @@ class Hero(arcade.Sprite):
         self.change_y = dy
         
         self.is_walking = dx or dy
+
+    def get_damage(self, damage_value):
+        if self.damaged_end > 0:
+            return
+
+        self.hp -= damage_value
+        self.damaged_end = 1
+        
+                

@@ -12,14 +12,17 @@ class DungeonRunner(arcade.View):
     def __init__(self):
         super().__init__()
         arcade.set_background_color(arcade.color.BLACK)
+
+        # Настройка камеры
         self.world_camera = arcade.camera.Camera2D()
         self.world_camera.zoom = 0.7 * (SCREEN_HEIGHT // 600)
         self.gui_camera = arcade.camera.Camera2D() 
 
+    # Подготовка объекта уровня. Передаём путь к карте и объект игрока для сохранения значений атрибутов
     def setup(self, level_path="levels/level_01.tmx", hero=None):
         base_dir = os.path.dirname(__file__)
         if not os.path.isabs(level_path):
-            level_path = os.path.join(base_dir, level_path)
+            level_path = os.path.join(base_dir, level_path) 
         self.player_list = arcade.SpriteList()
         self.enemy_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
@@ -28,8 +31,9 @@ class DungeonRunner(arcade.View):
         self.bullet_list = arcade.SpriteList()
         self.level_list = ["levels/level_01.tmx", "levels/level_02.tmx"]
 
-        self.tile_map = arcade.load_tilemap(level_path, scaling=TILE_SCALING)
+        self.tile_map = arcade.load_tilemap(level_path, scaling=TILE_SCALING) # Загрузка карты
 
+        # Загрузка тайлов из карты
         self.floor_list = self.tile_map.sprite_lists["floor"]
         self.wall_list = self.tile_map.sprite_lists["walls"]
         self.collision_list = self.tile_map.sprite_lists["collision"]
@@ -38,12 +42,13 @@ class DungeonRunner(arcade.View):
         self.shoot_sound = arcade.load_sound(":resources:/sounds/laser1.wav")
         self.keys_pressed = set()
 
+        # Создание объектов по координатам из карты
         object_layer = self.tile_map.object_lists["Object Layer 1"]
         if object_layer:
             for obj in object_layer:
                 x, y = obj.shape[0], obj.shape[1]
                 if obj.name == "player_spawn":
-                    self.player = Hero() if hero is None else hero
+                    self.player = Hero() if hero is None else hero # при первом запуске создаём игрока
                     self.player.center_x = x
                     self.player.center_y = y
                     self.player_list.append(self.player)
@@ -66,6 +71,7 @@ class DungeonRunner(arcade.View):
                     bomb.center_y = y
                     self.bomb_list.append(bomb)
 
+        # "Усложняем" игру в зависимости от количества пройденных уровней
         if self.player is not None and self.player.stats["levels"] != 0:
             for enemy in self.enemy_list:
                 buff = 1 + (self.player.stats["levels"] / 10)
@@ -75,9 +81,10 @@ class DungeonRunner(arcade.View):
         if self.player and self.collision_list:
             self.physics_engine = arcade.PhysicsEngineSimple(self.player, self.collision_list)
 
-        self.world_camera.position = (self.player.center_x, self.player.center_y)
+        self.world_camera.position = (self.player.center_x, self.player.center_y) 
 
-    def on_draw(self):
+    # Отрисовываем игровые элементы
+    def on_draw(self): 
         self.clear()
         self.world_camera.use()
         self.floor_list.draw()
@@ -100,8 +107,8 @@ class DungeonRunner(arcade.View):
         if self.physics_engine:
             self.physics_engine.update()
         self.player.update(delta_time, self.keys_pressed)
-
-        position = self.player.center_x, self.player.center_y
+        
+        # Проверка разных взаимодействий
         self.player_list.update_animation()
         self.bullet_list.update(delta_time)
         self.check_pickups()
@@ -109,15 +116,19 @@ class DungeonRunner(arcade.View):
         self.check_bullets_hit_enemies()
         self.check_damage()
 
+        # Следование камеры за игроком
+        position = self.player.center_x, self.player.center_y
         self.world_camera.position = arcade.math.lerp_2d(
             self.world_camera.position,
             position,
             CAMERA_LERP,
         )
 
+        # Обновление времени неуязвимости игрока при получении урона
         if self.player.damaged_end > 0:
             self.player.damaged_end -= delta_time
 
+    # Проверка на взаимодействие с монетками и ключом
     def check_pickups(self):
         for coin in arcade.check_for_collision_with_list(self.player, self.coin_list):
             coin.remove_from_sprite_lists()
@@ -128,11 +139,12 @@ class DungeonRunner(arcade.View):
             key.remove_from_sprite_lists()
             self.player.has_key = True
 
+    # Логика получения урона игроком
     def check_damage(self):
         for enemy in arcade.check_for_collision_with_list(self.player, self.enemy_list):
             self.player.get_damage(enemy.damage)
             if self.player.hp <= 0:
-                self.game_over()
+                self.game_over() # Заканчиваем игру когда игрок умирает
         for bomb in arcade.check_for_collision_with_list(self.player, self.bomb_list):
             self.player.get_damage(25)
             if self.player.hp <= 0:
@@ -143,9 +155,15 @@ class DungeonRunner(arcade.View):
     def game_over(self):
         self.window.show_view(GameOver(self.player))
 
+    # Проверка на имение пользователем ключа -> соприкосновения с дверью перехода на следующий уровень
     def check_exit(self):
         if not self.player.has_key:
-            return
+            return # Не исполняем ничего пока нет ключа
+        """
+        При переходе на следующий уровень прибавляем соответствующее значение в статистику, 
+        создаём объект нового уровня, передавая в него случайную карту из файлов и объект игрока,
+        передаем уровень в меню перехода
+        """
         if arcade.check_for_collision_with_list(self.player, self.exit_list):
             self.player.stats["levels"] += 1
             new_level = DungeonRunner()
@@ -153,6 +171,7 @@ class DungeonRunner(arcade.View):
             self.window.show_view(BeetwenLevel(new_level))
             return  
 
+    # Проверяем пули на попадение в врагов и стены 
     def check_bullets_hit_enemies(self):
         for bullet in self.bullet_list:
             hit_list = arcade.check_for_collision_with_list(bullet, self.enemy_list)
@@ -161,22 +180,25 @@ class DungeonRunner(arcade.View):
                 if not hit_walls:
                     continue
                 else:
-                    bullet.remove_from_sprite_lists()
+                    bullet.remove_from_sprite_lists() # удаляем пулю из спрайтов при попадании в стену
 
             bullet.remove_from_sprite_lists()
             for enemy in hit_list:
-                self.damage_enemy(enemy, bullet.damage)
+                self.damage_enemy(enemy, bullet.damage) # наносим урон врагу
 
+    # TODO: перенести в класс Enemy
+    # Изменяем здоровье врагу, если он погибает - убираем из спрайтов и добавляем соответствующее значение в статистику 
     def damage_enemy(self, enemy, damage):
         enemy.hp -= damage
         if enemy.hp <= 0:
             enemy.remove_from_sprite_lists()
             self.player.stats["kills"] += 1
 
+    # Создаём пулю при нажатии на мышку
     def on_mouse_press(self, x, y, button, modifiers):
         if button == arcade.MOUSE_BUTTON_LEFT:
-            world_pos = self.world_camera.unproject((x, y))
-            target_x, target_y = world_pos[0], world_pos[1]
+            world_pos = self.world_camera.unproject((x, y)) # Координаты на экране и в мире немного разные: обращаем в одну систему
+            target_x, target_y = world_pos[0], world_pos[1] 
             bullet = Bullet(
                 self.player.center_x,
                 self.player.center_y,

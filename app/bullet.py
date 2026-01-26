@@ -4,6 +4,7 @@ import arcade
 
 
 class Bullet(arcade.Sprite):
+    # Создание объекта пули по переданным параметрам
     def __init__(self, start_x, start_y, target_x, target_y, speed=800, damage=10, lifetime=1.2):
         super().__init__()
         self.texture = arcade.load_texture(":resources:images/space_shooter/laserBlue01.png")
@@ -13,6 +14,7 @@ class Bullet(arcade.Sprite):
         self.lifetime = lifetime
         self.time_alive = 0.0
 
+        # Вычисление величины для изменения координат
         x_diff = target_x - start_x
         y_diff = target_y - start_y
         angle = math.atan2(y_diff, x_diff)
@@ -20,6 +22,7 @@ class Bullet(arcade.Sprite):
         self.change_y = math.sin(angle) * speed
         self.angle = math.degrees(-angle)
 
+    # Изменение координат пули, удаление после конца времени жизни
     def update(self, delta_time=1 / 60):
         self.center_x += self.change_x * delta_time
         self.center_y += self.change_y * delta_time

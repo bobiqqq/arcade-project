@@ -31,7 +31,7 @@ class Hero(arcade.Sprite):
         
         self.is_walking = False
         self.face_direction = FaceDirection.RIGHT
-        self.has_key = True
+        self.has_key = False
         self.coins = 0
         self.stats = {"kills": 0, "coins": 0, "levels": 0}
         self.if_damaged = False

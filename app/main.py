@@ -105,7 +105,7 @@ class DungeonRunner(arcade.View):
         self.gui_camera.use()
 
         arcade.draw_text(
-            f"HP: {self.player.hp} | Coins: {self.player.coins} | Debug: {self.player.damaged_end} | {self.player.damage} | {self.player.speed}",
+            f"HP: {self.player.hp} | Coins: {self.player.coins}",
             10, self.window.height - 30,
             arcade.color.WHITE, 18
         )

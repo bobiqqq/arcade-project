@@ -2,7 +2,6 @@ from constants import *
 import enum
 import arcade
 
-
 class FaceDirection(enum.Enum):
     LEFT = 0
     RIGHT = 1
@@ -16,7 +15,7 @@ class Hero(arcade.Sprite):
         self.speed = PLAYER_MOVEMENT_SPEED
         self.hp = 100
         self.damaged_end = 0
-        self.damage = 10
+        self.damage = 7
         
         # Загрузка текстур
         self.idle_texture = arcade.load_texture(":resources:/images/animated_characters/female_person/femalePerson_idle.png")
@@ -91,6 +90,5 @@ class Hero(arcade.Sprite):
         if self.damaged_end > 0:
             return
         self.hp -= damage_value
-        self.damaged_end = 1
-        
-                
+        self.hp = round(self.hp, 1)
+        self.damaged_end = 0.7

@@ -98,7 +98,7 @@ class DungeonRunner(arcade.View):
         self.bullet_list.draw()
         self.gui_camera.use()
         arcade.draw_text(
-            f"HP: {self.player.hp} | Coins: {self.player.coins} | {self.player.damaged_end} | {self.player.damage} | {self.player.speed}",
+            f"HP: {self.player.hp} | Coins: {self.player.coins} | Debug: {self.player.damaged_end} | {self.player.damage} | {self.player.speed}",
             10, self.window.height - 30,
             arcade.color.WHITE, 18
         )
@@ -184,15 +184,10 @@ class DungeonRunner(arcade.View):
 
             bullet.remove_from_sprite_lists()
             for enemy in hit_list:
-                self.damage_enemy(enemy, bullet.damage) # наносим урон врагу
-
-    # TODO: перенести в класс Enemy
-    # Изменяем здоровье врагу, если он погибает - убираем из спрайтов и добавляем соответствующее значение в статистику 
-    def damage_enemy(self, enemy, damage):
-        enemy.hp -= damage
-        if enemy.hp <= 0:
-            enemy.remove_from_sprite_lists()
-            self.player.stats["kills"] += 1
+                enemy.get_damaged(bullet.damage) # наносим урон врагу, если он погибает - убираем из спрайтов и добавляем соответствующее значение в статистику 
+                if enemy.hp <= 0:
+                    enemy.remove_from_sprite_lists()
+                    self.player.stats["kills"] += 1 
 
     # Создаём пулю при нажатии на мышку
     def on_mouse_press(self, x, y, button, modifiers):

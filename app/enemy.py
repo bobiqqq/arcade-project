@@ -10,3 +10,6 @@ class Enemy(arcade.Sprite):
         self.texture = arcade.load_texture(":resources:images/enemies/slimeBlue.png")
         self.center_x = x
         self.center_y = y
+        
+    def get_damage(self, damage):
+        self.hp -= damage

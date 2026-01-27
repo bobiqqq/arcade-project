@@ -20,6 +20,7 @@ class SlimeEnemy(Enemy):
     def __init__(self, x, y):
         super().__init__(x, y)
         # Характеристики класса слайма и подгрузка текстуры
+        self.scale = 0.7
         self.speed = 150
         self.aggro_radius = 400
         self.texture = arcade.load_texture(":resources:images/enemies/slimeBlue.png")
@@ -49,7 +50,7 @@ class ShooterEnemy(Enemy):
         # Характеристики класса робота и подгрузка текстуры
         self.fire_cd = 1.2
         self.fire_timer = 1.2
-        self.fire_radius = 400
+        self.fire_radius = 450
         self.bullet_speed = 700
         self.texture = arcade.load_texture(":resources:images/animated_characters/robot/robot_idle.png")
 

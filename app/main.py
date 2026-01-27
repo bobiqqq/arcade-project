@@ -12,6 +12,7 @@ class DungeonRunner(arcade.View):
     def __init__(self):
         super().__init__()
         arcade.set_background_color(arcade.color.BLACK)
+        self.base_dir = os.path.dirname(__file__)
 
         # Настройка камеры
         self.world_camera = arcade.camera.Camera2D()
@@ -20,9 +21,8 @@ class DungeonRunner(arcade.View):
 
     # Подготовка объекта уровня. Передаём путь к карте и объект игрока для сохранения значений атрибутов
     def setup(self, level_path="levels/level_01.tmx", hero=None):
-        base_dir = os.path.dirname(__file__)
         if not os.path.isabs(level_path):
-            level_path = os.path.join(base_dir, level_path) 
+            level_path = os.path.join(self.base_dir, level_path)
         self.player_list = arcade.SpriteList()
         self.enemy_list = arcade.SpriteList()
         self.coin_list = arcade.SpriteList()
@@ -30,7 +30,10 @@ class DungeonRunner(arcade.View):
         self.bomb_list = arcade.SpriteList()
         self.bullet_list = arcade.SpriteList()
         self.enemy_bullet_list = arcade.SpriteList()
-        self.level_list = ["levels/level_01.tmx", "levels/level_02.tmx"]
+        self.level_list = [
+            os.path.join(self.base_dir, "levels", "level_01.tmx"),
+            os.path.join(self.base_dir, "levels", "level_02.tmx"),
+        ]
 
         self.tile_map = arcade.load_tilemap(level_path, scaling=TILE_SCALING) # Загрузка карты
 
@@ -40,7 +43,6 @@ class DungeonRunner(arcade.View):
         self.collision_list = self.tile_map.sprite_lists["collision"]
         self.exit_list = self.tile_map.sprite_lists["exit"]
 
-        self.shoot_sound = arcade.load_sound(":resources:/sounds/laser1.wav")
         self.keys_pressed = set()
 
         # Создание объектов по координатам из карты
@@ -78,6 +80,8 @@ class DungeonRunner(arcade.View):
                 buff = 1 + (self.player.stats["levels"] / 10)
                 enemy.hp *= buff
                 enemy.damage *= buff
+                enemy.damage = round(enemy.damage, 1)
+                
 
         if self.player and self.collision_list:
             self.physics_engine = arcade.PhysicsEngineSimple(self.player, self.collision_list) # Добавляем движок физики для игрока и списка коллизий
@@ -210,8 +214,7 @@ class DungeonRunner(arcade.View):
                 lifetime=BULLET_LIFETIME,
             )
             self.bullet_list.append(bullet)
-
-            arcade.play_sound(self.shoot_sound)
+            
 
     def on_key_press(self, key, modifiers):
         self.keys_pressed.add(key)

@@ -70,7 +70,7 @@ class BeetwenLevel(arcade.View):
             anchor_y="center",
         )
         arcade.draw_text(
-            "1: Увеличить здоровье на 20",
+            "1: Увеличить здоровье на 20 - 5 монет",
             self.window.width / 2,
             self.window.height / 2 - 50,
             arcade.color.GRAY,
@@ -79,7 +79,7 @@ class BeetwenLevel(arcade.View):
             anchor_y="center",
         )
         arcade.draw_text(
-            "2: Увеличить урон на 3",
+            "2: Увеличить урон на 3 - 7 монет ",
             self.window.width / 2,
             self.window.height / 2 - 80,
             arcade.color.GRAY,
@@ -88,7 +88,7 @@ class BeetwenLevel(arcade.View):
             anchor_y="center",
         )
         arcade.draw_text(
-            "3: Увеличить скорость на 7%",
+            "3: Увеличить скорость на 7% - 4 монеты",
             self.window.width / 2,
             self.window.height / 2 - 110,
             arcade.color.GRAY,
@@ -101,12 +101,15 @@ class BeetwenLevel(arcade.View):
     def on_key_press(self, key, modifiers):
         if key == arcade.key.KEY_1:
             self.level.player.hp += 20
+            self.level.player.coins -= 5
             self.window.show_view(self.level)
         elif key == arcade.key.KEY_2:
             self.level.player.damage += 3
+            self.level.player.coins -= 7
             self.window.show_view(self.level)
         elif key == arcade.key.KEY_3:
             self.level.player.speed *= 1.07
+            self.level.player.coins -= 4
             self.level.player.speed = round(self.level.player.speed)
             self.window.show_view(self.level)
         elif key == arcade.key.ENTER:

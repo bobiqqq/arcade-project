@@ -22,12 +22,18 @@ class Bullet(arcade.Sprite):
         self.change_y = math.sin(angle) * speed
         self.angle = math.degrees(-angle)
 
-    # Изменение координат пули, удаление после конца времени жизни
-    def update(self, delta_time=1 / 60):
+    # Изменение координат пули, удаление после конца времени жизни или ударе об стену
+    def update(self, delta_time=1 / 60, collision=None):
         self.center_x += self.change_x * delta_time
         self.center_y += self.change_y * delta_time
 
         self.time_alive += delta_time
         if self.time_alive >= self.lifetime:
             self.remove_from_sprite_lists()
+        if arcade.check_for_collision_with_list(self, collision):
+            self.remove_from_sprite_lists()
+        
+
+        
+        
 

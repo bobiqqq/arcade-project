@@ -44,6 +44,8 @@ class BeetwenLevel(arcade.View):
         super().__init__()
         self.level = level
         self.level.player.has_key = False # Обнуляем наличие ключа у игрока при переходе на новый уровень
+        self.message = ""
+        self.message_timer = 0.0
 
     def on_show_view(self):
         arcade.set_background_color(arcade.color.BLACK)
@@ -96,24 +98,57 @@ class BeetwenLevel(arcade.View):
             anchor_x="center",
             anchor_y="center",
         )
+        # Рисуем уведомление если оно есть
+        if self.message:
+            arcade.draw_text(
+                self.message,
+                self.window.width / 2,
+                self.window.height / 2 + 90,
+                arcade.color.RED,
+                font_size=24,
+                anchor_x="center",
+                anchor_y="center",
+            )
 
-    # Выбор улучшения и переход на новый уровень
+    # Выбор улучшения с проверкой на нехватку монет и переход на новый уровень
     def on_key_press(self, key, modifiers):
         if key == arcade.key.KEY_1:
-            self.level.player.hp += 20
-            self.level.player.coins -= 5
-            self.window.show_view(self.level)
+            if self.level.player.coins >= 5:
+                self.level.player.hp += 20
+                self.level.player.coins -= 5
+                self.window.show_view(self.level)
+            else:
+                self.show_message(f"Не хватает {3 - self.level.player.coins} монет!", 2.0)
         elif key == arcade.key.KEY_2:
-            self.level.player.damage += 3
-            self.level.player.coins -= 7
-            self.window.show_view(self.level)
+            if self.level.player.coins >= 7:
+                self.level.player.damage += 3
+                self.level.player.coins -= 7
+                self.window.show_view(self.level)
+            else:
+                self.show_message(f"Не хватает {7 - self.level.player.coins} монет!", 2.0)
         elif key == arcade.key.KEY_3:
-            self.level.player.speed *= 1.07
-            self.level.player.coins -= 4
-            self.level.player.speed = round(self.level.player.speed)
-            self.window.show_view(self.level)
+            if self.level.player.coins >= 4:
+                self.level.player.speed *= 1.07
+                self.level.player.coins -= 4
+                self.level.player.speed = round(self.level.player.speed)
+                self.window.show_view(self.level)
+            else:
+                self.show_message(f"Не хватает {4 - self.level.player.coins} монет!", 2.0)
         elif key == arcade.key.ENTER:
             self.window.show_view(self.level)
+
+    # Таймер для отображения о нехватке монет
+    def on_update(self, delta_time):
+        if self.message_timer > 0:
+            self.message_timer -= delta_time
+            if self.message_timer <= 0:
+                self.message = ""
+                self.message_timer = 0
+    
+    # Добавление текста и продолжительности уведомления
+    def show_message(self, text, duration):
+        self.message = text
+        self.message_timer = duration
 
 
 class GameOver(arcade.View):
@@ -181,4 +216,3 @@ class GameOver(arcade.View):
             anchor_x="center",
             anchor_y="center",
         )
-

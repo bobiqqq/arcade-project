@@ -8,7 +8,6 @@ class Enemy(arcade.Sprite):
     def __init__(self, x=None, y=None):
         super().__init__()
         # Основные характеристики
-        self.damage = 10
         self.hp = 50
         self.center_x = x
         self.center_y = y

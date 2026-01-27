@@ -192,7 +192,7 @@ class GameOver(arcade.View):
         arcade.draw_text(
             f"Убийства: {self.kills}",
             self.window.width / 2,
-            self.window.height / 2 - 40,
+            self.window.height / 2 - 45,
             arcade.color.GRAY,
             font_size=18,
             anchor_x="center",
@@ -201,7 +201,7 @@ class GameOver(arcade.View):
         arcade.draw_text(
             f"Уровней пройдено: {self.levels}",
             self.window.width / 2,
-            self.window.height / 2 - 65,
+            self.window.height / 2 - 75,
             arcade.color.GRAY,
             font_size=18,
             anchor_x="center",
@@ -210,7 +210,7 @@ class GameOver(arcade.View):
         arcade.draw_text(
             f"Монет собрано: {self.coins}",
             self.window.width / 2,
-            self.window.height / 2 - 90,
+            self.window.height / 2 - 105,
             arcade.color.GRAY,
             font_size=18,
             anchor_x="center",
